@@ -130,3 +130,94 @@ test("Cesium selects the same imagery resolution as a standard-origin cache", ()
     standard.destroy();
   }
 });
+
+test("higher LODs and fractional origins preserve full coverage and source UVs", () => {
+  for (const origin of [{ x: -400, y: 400 }, { x: -400.1, y: 400.1 }]) {
+    const provider = ArcGisOffsetImageryProvider.fromMetadata(
+      "https://example.invalid/MapServer", makeMetadata({ origin }),
+    );
+    const layer = new ImageryLayer(provider);
+    try {
+      for (const level of [0, 2, 6]) {
+        const span = 180 / 2 ** level;
+        const columns = 2 ** (level + 1);
+        const rows = 2 ** level;
+        // The corner tiles exercise both sides of the date line and both poles.
+        const coordinates = [[0, 0], [columns - 1, 0], [0, rows - 1], [columns - 1, rows - 1]];
+        for (const [x, y] of coordinates) {
+          const tile = terrain(-180 + x * span, 90 - (y + 1) * span, -180 + (x + 1) * span, 90 - y * span);
+          tile.level = level;
+          // Select this exact imagery LOD through Cesium's real LOD calculation.
+          const error = provider.tilingScheme.ellipsoid.maximumRadius * Math.PI / provider.tileWidth / 2 ** level;
+          try {
+            layer._createTileImagerySkeletons(tile, { getLevelMaximumGeometricError: () => error });
+            let area = 0;
+            for (const mapping of tile.data.imagery) {
+              const image = mapping.loadingImagery;
+              assert.equal(image.level, level);
+              const r = mapping.textureCoordinateRectangle;
+              const west = Math.max(0, r.x), south = Math.max(0, r.y);
+              const east = Math.min(1, r.z), north = Math.min(1, r.w);
+              assert.ok(east > west && north > south);
+              area += (east - west) * (north - south);
+              const transform = layer._calculateTextureTranslationAndScale(tile, {
+                readyImagery: image, useWebMercatorT: false,
+              });
+              for (const u of [west, east]) {
+                for (const v of [south, north]) {
+                  const sourceU = transform.x + u * transform.z;
+                  const sourceV = transform.y + v * transform.w;
+                  const longitude = tile.rectangle.west + u * tile.rectangle.width;
+                  const latitude = tile.rectangle.south + v * tile.rectangle.height;
+                  close(sourceU, (longitude - image.rectangle.west) / image.rectangle.width);
+                  close(sourceV, (latitude - image.rectangle.south) / image.rectangle.height);
+                  assert.ok(sourceU >= -1e-10 && sourceU <= 1 + 1e-10);
+                  assert.ok(sourceV >= -1e-10 && sourceV <= 1 + 1e-10);
+                }
+              }
+            }
+            close(area, 1, `coverage for origin=${origin.x}, level=${level}, x=${x}, y=${y}`);
+          } finally {
+            free(tile);
+          }
+        }
+      }
+    } finally {
+      layer.destroy();
+    }
+  }
+});
+
+test("a regional overlay clips to fullExtent while keeping original source UVs", () => {
+  const metadata = makeMetadata();
+  metadata.fullExtent = { xmin: 110, ymin: 20, xmax: 120, ymax: 30, spatialReference: { wkid: 4326 } };
+  const layer = new ImageryLayer(ArcGisOffsetImageryProvider.fromMetadata(
+    "https://example.invalid/MapServer", metadata,
+  ));
+  const overlapping = terrain(100, 10, 125, 35);
+  const outside = terrain(-180, -90, 0, 90);
+  try {
+    assert.equal(layer.isBaseLayer(), false);
+    assert.equal(layer._createTileImagerySkeletons(outside, forceRootLOD), false);
+    assert.equal(outside.data.imagery.length, 0);
+    assert.equal(layer._createTileImagerySkeletons(overlapping, forceRootLOD), true);
+    assert.equal(overlapping.data.imagery.length, 1);
+    const mapping = overlapping.data.imagery[0];
+    const bounds = mapping.textureCoordinateRectangle;
+    close(bounds.x, 10 / 25);
+    close(bounds.y, 10 / 25);
+    close(bounds.z, 20 / 25);
+    close(bounds.w, 20 / 25);
+    const transform = layer._calculateTextureTranslationAndScale(overlapping, {
+      readyImagery: mapping.loadingImagery, useWebMercatorT: false,
+    });
+    // The source remains the full [-40,-140,140,40] image, including pixels
+    // outside the regional display extent. The central point is (115,25).
+    close(transform.x + 0.6 * transform.z, (115 + 40) / 180);
+    close(transform.y + 0.6 * transform.w, (25 + 140) / 180);
+  } finally {
+    free(overlapping);
+    free(outside);
+    layer.destroy();
+  }
+});

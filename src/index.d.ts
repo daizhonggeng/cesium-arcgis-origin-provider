@@ -69,6 +69,7 @@ export interface ArcGisOffsetImageryProviderOptions {
   /** Indices into tileInfo.lods, rather than its server-side level identifiers. */
   minimumLevel?: number;
   maximumLevel?: number;
+  /** Application credit. The service copyright is also retained when present. */
   credit?: Credit | string;
   hasAlphaChannel?: boolean;
   tileDiscardPolicy?: TileDiscardPolicy;
@@ -134,6 +135,7 @@ export class ArcGisOffsetImageryProvider implements ImageryProvider {
   readonly usingPrecachedTiles: true;
   /** Always returns undefined; feature picking is unsupported. */
   enablePickFeatures: boolean;
+  /** Service copyright when a custom credit is configured; otherwise undefined at runtime. */
   getTileCredits(x: number, y: number, level: number): Credit[];
   pickFeatures(
     x: number,

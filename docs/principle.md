@@ -20,7 +20,7 @@
 真实地球：west=-180, south=-90, east=180, north=90
 ```
 
-这里扩展的是计算索引用的数学网格，地球形状与相机范围不变。只有与实际覆盖区及当前视野相交的源图才会被请求，并非预先下载全部根瓦片和子瓦片。
+这里扩展的是计算索引用的数学网格，地球形状与相机范围不变。Cesium 按视野和覆盖范围选择影像，并可加载祖先影像用于过渡或失败回退；不会预先下载全部根瓦片和子瓦片。区域服务作为最底层时还受下文的基底层延展规则影响。
 
 **不能只扩大矩形而保持默认的 `2×1` 根数量。** 那会改变单块瓦片跨度和 Cesium 选择影像层级时使用的像素间距。本项目同时设置完整数学范围和 `4×3` 根数量，保持 `720°/4=180°` 的正确零级跨度；后续每级继续对半划分。
 
@@ -69,7 +69,9 @@ Cesium 的 `ImageryLayer` 会枚举与地形块相交的影像块，为每一块
 | 范围 | 用途 |
 | --- | --- |
 | `tilingScheme.rectangle` | 完整源网格的数学范围，供索引、瓦片范围及 LOD 计算 |
-| `provider.rectangle` | `fullExtent` 与合法地球坐标范围的交集，限制实际显示，也可用于相机定位 |
+| `provider.rectangle` | `fullExtent` 与合法地球坐标范围的交集，定义影像覆盖区，也可用于相机定位 |
+
+Cesium 对最底层影像有特殊处理：它会把区域服务的边缘纹理向覆盖区外延展，用来填满地球。因此 `provider.rectangle` 不能单独禁止基底层延展。需要严格按覆盖区显示时，应在它下面保留一个全球底图或透明全球影像，让本 Provider 作为上层影像；演示采用透明全球影像。该规则来自 `ImageryLayer`，与自定义原点无关。
 
 例如零级源瓦片 `(column=2,row=2)` 的完整范围是：
 
@@ -110,4 +112,4 @@ parentLevel  = level - 1
 
 - [OffsetGeographicTilingScheme](../src/OffsetGeographicTilingScheme.js)：数学范围、根数量、索引和真实瓦片范围。
 - [ArcGisOffsetImageryProvider](../src/ArcGisOffsetImageryProvider.js)：合法显示范围、元数据、单张原图请求及 Cesium 接口。
-- [真实 Cesium 影像映射测试](../tests/imagery-layer.test.js)：多图覆盖、共享缓存、边缘 UV 及 LOD 对照。
+- [真实 Cesium 影像映射测试](https://github.com/daizhonggeng/cesium-arcgis-origin-provider/blob/main/tests/imagery-layer.test.js)：多图覆盖、共享缓存、边缘 UV 及 LOD 对照。

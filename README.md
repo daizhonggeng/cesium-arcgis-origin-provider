@@ -15,9 +15,9 @@ npm ci
 npm run dev
 ```
 
-打开 Vite 显示的本地地址。默认演示使用本地诊断服务 `/mock/MapServer`：图片颜色编码经纬度，深色线表示源切片边界。可在页面输入自己的 ArcGIS `MapServer` 地址，或使用 `?url=` 查询参数。诊断服务仅供本地验证，静态部署时需接入真实服务。
+打开 Vite 显示的本地地址。默认演示使用本地诊断服务 `/mock/MapServer`：图片颜色编码经纬度，深色线表示源切片边界。可在页面输入自己的 ArcGIS `MapServer` 地址，或使用 `?url=` 查询参数。加载成功后自动定位到服务覆盖范围，连续切换时以最后一次操作为准。诊断服务仅供本地验证，静态部署时需接入真实服务。
 
-演示采用椭球地形并关闭默认底图，不需要 Cesium ion token。
+演示采用椭球地形，以透明全球影像占据最底层，使区域服务按实际范围显示，不需要 Cesium ion token。
 
 ```sh
 # 未安装可用 Chrome/Chromium 时，先安装测试浏览器
@@ -36,6 +36,14 @@ npm run check
 ```sh
 npm install ./path/to/cesium-arcgis-origin-provider
 ```
+
+也可从公开仓库安装（项目尚未发布到 npm 注册表）：
+
+```sh
+npm install github:daizhonggeng/cesium-arcgis-origin-provider
+```
+
+需要固定版本时，在 Git 地址后附加 `#<commit SHA>`。本项目开发使用 `.nvmrc` 中的 Node.js 24。
 
 在已配置 Cesium 静态资源的应用中使用：
 
@@ -144,7 +152,7 @@ const provider2 = ArcGisOffsetImageryProvider.fromMetadata(url, metadata, option
 | `rectangle` | 可选的合法地理矩形，单位弧度；与 `fullExtent` 取交集，不支持跨日期变更线 |
 | `minimumLevel` | 影像 LOD 选择下限，默认 `0`；祖先图片仍可用于加载回退 |
 | `maximumLevel` | 最大可请求 LOD，默认 `lods.length - 1` |
-| `credit` | 字符串或 Cesium `Credit`；默认使用服务版权文字 |
+| `credit` | 字符串或 Cesium `Credit`；默认使用服务版权文字，自定义时仍保留服务版权署名 |
 | `hasAlphaChannel` | 默认 `true`；不需要透明度时可设置 `false` |
 | `tileDiscardPolicy` | 可选 Cesium 空白/缺失瓦片判定策略 |
 
@@ -154,7 +162,9 @@ const provider2 = ArcGisOffsetImageryProvider.fromMetadata(url, metadata, option
 
 Provider 提供 Cesium 所需的 `tileWidth`、`tileHeight`、`minimumLevel`、`maximumLevel`、`tilingScheme`、`rectangle`、`errorEvent`、`credit`、`hasAlphaChannel`、`tileDiscardPolicy`、`proxy`，以及 `url`、`token`、`ready`、`readyPromise`、`usingPrecachedTiles`。可选版权、代理和丢弃策略在未配置时可能为 `undefined`。
 
-`requestImage(x,y,level,request)` 将 `x/y` 直接作为源列/行号，返回 Cesium `ImageryProvider.loadImage` 的结果。调度器限流时的 `undefined` 会原样返回。Provider 不增加第二套影像缓存，由 Cesium 负责影像复用、纹理和请求生命周期。`getTileCredits` 和 `pickFeatures` 返回 `undefined`，不提供单瓦片额外版权或要素拾取。
+`requestImage(x,y,level,request)` 将 `x/y` 直接作为源列/行号，返回 Cesium `ImageryProvider.loadImage` 的结果。调度器限流时的 `undefined` 会原样返回。Provider 不增加第二套影像缓存，由 Cesium 负责影像复用、纹理和请求生命周期。配置自定义 `credit` 时，`getTileCredits` 保留服务的版权文字；否则无需额外瓦片署名。`pickFeatures` 返回 `undefined`，不支持要素拾取。
+
+从服务目录复制的 `?f=json` / `?f=pjson` 参数不会传到瓦片请求；元数据请求单独使用 `f=pjson`，认证及其他查询参数保持传递。
 
 独立导出的 `OffsetGeographicTilingScheme({ tileInfo, ellipsoid })` 继承 `GeographicTilingScheme`，另提供 `levelIds`、`resolutions`、`tileWidth`、`tileHeight`、`maximumLevel`。`tileXYToNativeRectangle` 返回度，`tileXYToRectangle` 返回弧度，均保留原始瓦片的完整范围。
 
@@ -168,6 +178,8 @@ Provider 提供 Cesium 所需的 `tileWidth`、`tileHeight`、`minimumLevel`、`
 ## 验证与兼容性
 
 仓库包含网格计算、父子索引、极区边界、请求路径、调度限流和 Cesium 影像纹理映射测试，以及使用本地诊断服务的 3D/2D 浏览器检查。浏览器检查通过地理位置采样比较实际像素颜色，覆盖日期变更线两侧与高纬区域。
+
+GitHub Actions 在提交和拉取请求上执行同一套检查，并保存浏览器报告及截图，便于发现后续 Cesium 升级造成的兼容性变化。
 
 **实际运行验证版本为 Cesium 1.146.0。** `peerDependencies` 的 `>=1.146.0 <2` 是允许安装的范围，不代表该范围内所有版本均已验证；升级 Cesium 后应重新运行完整检查。旧版本 Cesium 未验证，也不属于当前支持范围。
 

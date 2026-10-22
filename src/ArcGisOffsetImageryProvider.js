@@ -10,6 +10,11 @@ import OffsetGeographicTilingScheme from "./OffsetGeographicTilingScheme.js";
 function serviceResource(url, token) {
   if (!url) throw new Error("A MapServer URL is required.");
   const resource = Resource.createIfNeeded(url).clone();
+  // Service-directory URLs often contain ?f=json/pjson. The format belongs to
+  // the metadata request, not the binary tile endpoint. Mutate only our clone.
+  for (const key of Object.keys(resource.queryParameters)) {
+    if (key.toLowerCase() === "f") delete resource.queryParameters[key];
+  }
   resource.appendForwardSlash();
   if (token !== undefined) resource.setQueryParameters({ token });
   return resource;
@@ -66,8 +71,16 @@ export class ArcGisOffsetImageryProvider {
     }
     this._rectangle = rectangle;
     this._errorEvent = new Event();
-    const credit = options.credit ?? metadata.copyrightText;
-    this._credit = typeof credit === "string" && credit ? new Credit(credit) : credit || undefined;
+    const credit = options.credit;
+    this._credit = typeof credit === "string" ? (credit ? new Credit(credit) : undefined) : credit;
+    this._tileCredits = undefined;
+    if (typeof metadata.copyrightText === "string" && metadata.copyrightText.length > 0) {
+      const serviceCredit = new Credit(metadata.copyrightText);
+      // Match Cesium's ArcGIS provider: custom application attribution must
+      // not erase the imagery service's own copyright credit.
+      if (this._credit) this._tileCredits = [serviceCredit];
+      else this._credit = serviceCredit;
+    }
     this._hasAlphaChannel = options.hasAlphaChannel ?? true;
     this._tileDiscardPolicy = options.tileDiscardPolicy;
     this._minimumLevel = options.minimumLevel ?? 0;
@@ -109,7 +122,7 @@ export class ArcGisOffsetImageryProvider {
   get readyPromise() { return Promise.resolve(this); }
   get usingPrecachedTiles() { return true; }
 
-  getTileCredits() { return undefined; }
+  getTileCredits() { return this._tileCredits; }
   pickFeatures() { return undefined; }
 
   requestImage(x, y, level, request) {
