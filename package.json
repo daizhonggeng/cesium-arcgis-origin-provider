@@ -1,0 +1,41 @@
+{
+  "name": "cesium-arcgis-origin-provider",
+  "version": "0.1.0",
+  "description": "Direct ArcGIS geographic cache imagery with a custom origin, without image composition or Cesium patches",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/*.test.js",
+    "typecheck": "tsc --project tsconfig.check.json --noEmit",
+    "test:browser": "node scripts/browser-smoke.mjs",
+    "check": "npm test && npm run typecheck && npm run build && npm run test:browser"
+  },
+  "peerDependencies": {
+    "cesium": ">=1.146.0 <2"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "cesium": "1.146.0",
+    "playwright": "1.64.1",
+    "pngjs": "7.0.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  },
+  "license": "MIT"
+}
