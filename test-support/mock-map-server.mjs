@@ -1,5 +1,8 @@
 import { PNG } from "pngjs";
 
+// Diagnostic example only: this mock cache uses (-400, 400). The real Provider
+// reads the service origin and supports x <= -180 AND y >= 90 (degrees),
+// subject to the WKID, LOD and other constraints documented in README.md.
 export function metadata() {
   return {
     currentVersion: 11.3,

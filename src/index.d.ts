@@ -34,7 +34,7 @@ export interface ArcGisLevelOfDetail {
 export interface ArcGisTileInfo {
   rows: number;
   cols: number;
-  /** Source origin in degrees, with x <= -180 and y >= 90. */
+  /** Finite source origin in degrees. Both x <= -180 AND y >= 90 are required. */
   origin: { x: number; y: number };
   spatialReference: ArcGisSpatialReference;
   lods: ArcGisLevelOfDetail[];
@@ -103,6 +103,8 @@ export class OffsetGeographicTilingScheme extends GeographicTilingScheme {
 /**
  * Direct ArcGIS geographic cache imagery. No image composition, canvas,
  * reprojection, or Cesium prototype patching is performed.
+ * Requires WKID 4326, origin.x <= -180 AND origin.y >= 90 (degrees),
+ * and halving LOD resolutions. Reads the origin from service metadata.
  * Optional Cesium properties follow the upstream ImageryProvider declarations.
  */
 export class ArcGisOffsetImageryProvider implements ImageryProvider {

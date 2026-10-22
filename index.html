@@ -11,7 +11,8 @@
     <aside class="panel">
       <div class="eyebrow">CESIUM / DIRECT TILE PROVIDER</div>
       <h1>自定义原点，原图直载</h1>
-      <p>原点 <code>(−400, 400)</code> · 经纬度缓存 · 无图片合成</p>
+      <p>默认示例原点 <code>(−400, 400)</code> · 原图直载</p>
+      <p class="support-range"><strong>支持的原点范围（度）</strong><br /><code>origin.x ≤ −180</code> 且 <code>origin.y ≥ 90</code><br />WKID 4326 · 分辨率逐级减半</p>
       <form id="service-form">
         <label for="service-url">ArcGIS MapServer 地址</label>
         <div class="input-row"><input id="service-url" value="/mock/MapServer" spellcheck="false" /><button type="submit">加载</button></div>

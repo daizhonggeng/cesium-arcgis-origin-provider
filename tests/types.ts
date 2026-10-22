@@ -17,7 +17,7 @@ const metadata: ArcGisMapServerMetadata = {
     rows: 256,
     cols: 256,
     spatialReference: { wkid: 4326 },
-    origin: { x: -400, y: 400 },
+    origin: { x: -400, y: 400 }, // Example within x <= -180 AND y >= 90.
     lods: [
       { level: 0, resolution: 0.703125 },
       { level: 1, resolution: 0.3515625 },

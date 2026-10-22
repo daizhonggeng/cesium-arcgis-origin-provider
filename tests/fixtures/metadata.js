@@ -1,4 +1,4 @@
-/** Synthetic ArcGIS geographic cache metadata; no live service is required. */
+/** Synthetic test metadata. (-400, 400) is the default example, not a Provider constant. */
 export function makeMetadata({ origin = { x: -400, y: 400 }, wkid = 4326 } = {}) {
   return {
     currentVersion: 11.3,

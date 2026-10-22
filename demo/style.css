@@ -6,6 +6,8 @@ body { background: #080d16; color: #e6edf7; font: 14px/1.65 -apple-system, Blink
 h1 { font-size: 23px; margin: 9px 0 5px; line-height: 1.4; }
 p { color: #a9b8cb; margin: 5px 0 20px; }
 code { color: #a6dcff; }
+.support-range { padding: 10px 12px; border-left: 3px solid #7eb9dc; background: #1b2a3d; font-size: 12px; }
+.support-range strong { color: #d6eafa; }
 label { display: block; font-size: 12px; color: #b5c2d4; margin-bottom: 6px; }
 .input-row { display: flex; gap: 8px; }
 input { min-width: 0; flex: 1; padding: 10px; color: #e6edf7; background: #090f1b; border: 1px solid #3b4a62; border-radius: 7px; outline-offset: 3px; }

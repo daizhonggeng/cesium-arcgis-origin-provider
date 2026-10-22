@@ -1,7 +1,7 @@
 {
   "name": "cesium-arcgis-origin-provider",
   "version": "0.1.1",
-  "description": "Direct ArcGIS geographic cache imagery with a custom origin, without image composition or Cesium patches",
+  "description": "Direct Cesium imagery for ArcGIS WKID 4326 caches: origin.x <= -180 and origin.y >= 90, with halving LOD resolutions. No image composition.",
   "type": "module",
   "repository": {
     "type": "git",

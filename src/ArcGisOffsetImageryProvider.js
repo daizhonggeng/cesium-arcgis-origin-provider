@@ -39,6 +39,8 @@ function geographicRectangle(extent, name) {
 
 /**
  * An independent ImageryProvider for an ArcGIS geographic tile cache.
+ * Supports WKID 4326, origin.x <= -180 AND origin.y >= 90 (degrees), and
+ * halving LOD resolutions. The origin is read from service metadata.
  * Each request returns exactly one original server tile. No canvas, cropping,
  * image composition, reprojection, or Cesium prototype patches are performed.
  * Construct with fromUrl(), or fromMetadata() when metadata is already available.

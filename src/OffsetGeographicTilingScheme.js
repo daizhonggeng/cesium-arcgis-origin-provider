@@ -40,8 +40,9 @@ function floorCoordinate(value) {
  * its entire image into the clipped area and produce incorrect texture UVs.
  * Use this scheme for imagery, never for a terrain provider or camera bounds.
  *
- * The original grid is padded to whole root tiles covering the world. For
- * origin (-400, 400), 256-pixel tiles and resolution 0.703125, that is a 4 x 3
+ * Supported origins must be finite, with x <= -180 AND y >= 90 (degrees).
+ * The original grid is padded to whole root tiles covering the world. As an
+ * example, origin (-400, 400), 256-pixel tiles and resolution 0.703125 give a 4 x 3
  * root grid over [-400, -140, 320, 400] degrees. Consequently Cesium's normal
  * LOD calculation still sees 720 / 4 = 180 degrees per root tile, and its
  * floor(x / 2), floor(y / 2) parent indices are the ArcGIS source parents.
